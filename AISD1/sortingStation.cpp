@@ -18,7 +18,6 @@ void SortingStation::clear() {
 // Токенизация строки в инфиксную или постфиксную запись
 bool SortingStation::tokenize(const std::string& input, bool isInf)
 {
-    clear();
 
     std::string token;
     std::istringstream stream(input);
@@ -208,27 +207,8 @@ void SortingStation::postToInf() {
             std::string leftOperand = expressionStack.top();
             expressionStack.pop();
 
-            // Определяем, нужны ли скобки
-            std::string newExpr = leftOperand + " " + value + " " + rightOperand;
-
-            // Проверка, нужны ли скобки для левого операнда
-            if (leftOperand.find('(') != std::string::npos) {
-                // Если внутри левого операнда есть оператор, возможно, нужны скобки
-                std::string leftOp = leftOperand.substr(leftOperand.find_last_of(" ") + 1);
-                if (getPrecedence(leftOp) < getPrecedence(value)) {
-                    newExpr = "(" + newExpr;
-                }
-            }
-
-            // Проверка, нужны ли скобки для правого операнда
-            if (rightOperand.find('(') != std::string::npos) {
-                // Если внутри правого операнда есть оператор, возможно, нужны скобки
-                std::string rightOp = rightOperand.substr(rightOperand.find_last_of(" ") + 1);
-                if (getPrecedence(rightOp) <= getPrecedence(value)) {
-                    newExpr += ")";
-                }
-            }
-
+            // Упрощение: добавляем скобки, если это необходимо
+            std::string newExpr = wrapIfNeeded(leftOperand, value, true) + " " + value + " " + wrapIfNeeded(rightOperand, value, false);
             expressionStack.push(newExpr);
         }
     }
@@ -237,7 +217,7 @@ void SortingStation::postToInf() {
         throw std::runtime_error("Ошибка преобразования: стек не содержит одно итоговое выражение");
     }
 
-    tokensInf.push_back(std::make_pair("value", expressionStack.top()));
+    tokensInf.emplace_back("value", expressionStack.top());
 }
 
 // Вычисление выражения в постфиксной записи
