@@ -18,6 +18,7 @@ void SortingStation::clear() {
 // Токенизация строки в инфиксную или постфиксную запись
 bool SortingStation::tokenize(const std::string& input, bool isInf)
 {
+    clear();
 
     std::string token;
     std::istringstream stream(input);
