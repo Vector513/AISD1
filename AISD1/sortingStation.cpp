@@ -135,14 +135,36 @@ bool SortingStation::isLeftAssociative(const std::string& op) {
     return op != "^";
 }
 
-// Определяем необходимость добавления скобок
 std::string SortingStation::wrapIfNeeded(const std::string& expression, const std::string& operatorSymbol, bool isLeft) {
-    // Определяем, требуется ли обёртка
-    if (getPrecedence(operatorSymbol) > getPrecedence(expression)) {
+    // Извлекаем оператор из выражения (если оно уже содержит оператор)
+    std::string innerOp;
+    size_t firstSpace = expression.find(' ');
+    if (firstSpace != std::string::npos) {
+        innerOp = expression.substr(firstSpace + 1, 1); // извлекаем оператор из выражения
+    }
+
+    // Если оператор отсутствует, просто возвращаем исходное выражение без скобок
+    if (innerOp.empty()) {
+        return expression;
+    }
+
+    // Проверяем приоритет текущего оператора и оператора в подвыражении
+    int currentPrecedence = getPrecedence(operatorSymbol);
+    int innerPrecedence = getPrecedence(innerOp);
+
+    // Если приоритет внутреннего оператора меньше, нужны скобки
+    if (currentPrecedence > innerPrecedence) {
         return "(" + expression + ")";
     }
+    // Если приоритет равен и оператор является правоассоциативным, тоже нужны скобки
+    if (currentPrecedence == innerPrecedence && (!isLeft || !isLeftAssociative(operatorSymbol))) {
+        return "(" + expression + ")";
+    }
+
+    // В других случаях скобки не нужны
     return expression;
 }
+
 
 // Преобразование инфиксной записи в постфиксную
 void SortingStation::infToPost() {
@@ -154,40 +176,52 @@ void SortingStation::infToPost() {
         const std::string& value = token.second;
 
         if (type == "value") {
-            tokensPost.push_back(token);
+            tokensPost.push_back(token); // Операнд сразу добавляем в постфиксную запись
         }
         else if (type == "operator") {
             if (value == "(") {
-                operatorStack.push(token);
+                operatorStack.push(token); // Скобку "(" добавляем в стек
             }
             else if (value == ")") {
+                // Убираем операторы из стека до тех пор, пока не найдем "("
                 while (!operatorStack.empty() && operatorStack.top().second != "(") {
                     tokensPost.push_back(operatorStack.top());
                     operatorStack.pop();
                 }
-                if (!operatorStack.empty()) {
+                // Убираем саму "("
+                if (!operatorStack.empty() && operatorStack.top().second == "(") {
                     operatorStack.pop();
                 }
             }
+            // Обрабатываем унарные операторы, такие как sin и cos
+            else if (value == "sin" || value == "cos") {
+                operatorStack.push(token); // Унарный оператор сразу помещаем в стек
+            }
             else {
-                while (!operatorStack.empty() && getPrecedence(operatorStack.top().second) >= getPrecedence(value)
-                    && isLeftAssociative(value)) {
+                // Проверяем приоритет текущего оператора и операторов в стеке
+                while (!operatorStack.empty() &&
+                    operatorStack.top().second != "(" && // Не трогаем "("
+                    (getPrecedence(operatorStack.top().second) > getPrecedence(value) ||
+                        (getPrecedence(operatorStack.top().second) == getPrecedence(value) && isLeftAssociative(value)))) {
                     tokensPost.push_back(operatorStack.top());
                     operatorStack.pop();
                 }
-                operatorStack.push(token);
+                operatorStack.push(token); // Добавляем оператор в стек
             }
         }
     }
 
+    // Опустошаем стек
     while (!operatorStack.empty()) {
         tokensPost.push_back(operatorStack.top());
         operatorStack.pop();
     }
 }
 
+
 // Преобразование постфиксной записи в инфиксную
-void SortingStation::postToInf() {
+void SortingStation::postToInf() 
+{
     tokensInf.clear();
     Stack<std::string> expressionStack;
 
@@ -208,8 +242,10 @@ void SortingStation::postToInf() {
             std::string leftOperand = expressionStack.top();
             expressionStack.pop();
 
-            // Упрощение: добавляем скобки, если это необходимо
-            std::string newExpr = wrapIfNeeded(leftOperand, value, true) + " " + value + " " + wrapIfNeeded(rightOperand, value, false);
+            std::string leftExpr = wrapIfNeeded(leftOperand, value, true);
+            std::string rightExpr = wrapIfNeeded(rightOperand, value, false);
+
+            std::string newExpr = leftExpr + " " + value + " " + rightExpr;
             expressionStack.push(newExpr);
         }
     }
@@ -220,6 +256,7 @@ void SortingStation::postToInf() {
 
     tokensInf.emplace_back("value", expressionStack.top());
 }
+
 
 // Вычисление выражения в постфиксной записи
 number SortingStation::evaluatePost() {
@@ -233,9 +270,10 @@ number SortingStation::evaluatePost() {
             valueStack.push(std::stod(value)); // Преобразуем строку в число
         }
         else if (type == "operator") {
+            // Обрабатываем бинарные операторы
             if (value == "+" || value == "-" || value == "*" || value == "/" || value == "^") {
                 if (valueStack.getSize() < 2) {
-                    throw std::runtime_error("Недостаточно операндов для выполнения операции");
+                    throw std::runtime_error("Недостаточно операндов для выполнения бинарной операции");
                 }
 
                 number rightOperand = valueStack.top();
@@ -262,6 +300,7 @@ number SortingStation::evaluatePost() {
                     valueStack.push(std::pow(leftOperand, rightOperand)); // Возведение в степень
                 }
             }
+            // Обрабатываем унарные операторы
             else if (value == "sin" || value == "cos") {
                 if (valueStack.empty()) {
                     throw std::runtime_error("Недостаточно операндов для выполнения унарной операции");
@@ -289,9 +328,6 @@ number SortingStation::evaluatePost() {
 
     return valueStack.top(); // Возвращаем результат вычисления
 }
-
-// Остальные функции остаются без изменений
-
 
 
 // Печать инфиксного выражения
