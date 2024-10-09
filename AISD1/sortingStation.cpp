@@ -9,13 +9,11 @@ SortingStation::SortingStation() : tokensInf(), tokensPost() {}
 
 SortingStation::~SortingStation() {}
 
-// Функция очистки токенов перед новым выражением
 void SortingStation::clear() {
     tokensInf.clear();
     tokensPost.clear();
 }
 
-// Токенизация строки в инфиксную или постфиксную запись
 bool SortingStation::tokenize(const std::string& input, bool isInf)
 {
     clear();
@@ -122,7 +120,6 @@ bool SortingStation::tokenize(const std::string& input, bool isInf)
     return true;
 }
 
-// Функция для получения приоритета оператора
 int SortingStation::getPrecedence(const std::string& op) {
     if (op == "+" || op == "-") return 1;
     if (op == "*" || op == "/") return 2;
@@ -130,7 +127,6 @@ int SortingStation::getPrecedence(const std::string& op) {
     return 0;
 }
 
-// Функция для проверки ассоциативности оператора
 bool SortingStation::isLeftAssociative(const std::string& op) {
     return op != "^";
 }
@@ -165,8 +161,6 @@ std::string SortingStation::wrapIfNeeded(const std::string& expression, const st
     return expression;
 }
 
-
-// Преобразование инфиксной записи в постфиксную
 void SortingStation::infToPost() {
     tokensPost.clear();
     Stack<std::pair<std::string, std::string>> operatorStack;
@@ -176,50 +170,43 @@ void SortingStation::infToPost() {
         const std::string& value = token.second;
 
         if (type == "value") {
-            tokensPost.push_back(token); // Операнд сразу добавляем в постфиксную запись
+            tokensPost.push_back(token);
         }
         else if (type == "operator") {
             if (value == "(") {
-                operatorStack.push(token); // Скобку "(" добавляем в стек
+                operatorStack.push(token);
             }
             else if (value == ")") {
-                // Убираем операторы из стека до тех пор, пока не найдем "("
                 while (!operatorStack.empty() && operatorStack.top().second != "(") {
                     tokensPost.push_back(operatorStack.top());
                     operatorStack.pop();
                 }
-                // Убираем саму "("
                 if (!operatorStack.empty() && operatorStack.top().second == "(") {
                     operatorStack.pop();
                 }
             }
-            // Обрабатываем унарные операторы, такие как sin и cos
             else if (value == "sin" || value == "cos") {
-                operatorStack.push(token); // Унарный оператор сразу помещаем в стек
+                operatorStack.push(token);
             }
             else {
-                // Проверяем приоритет текущего оператора и операторов в стеке
                 while (!operatorStack.empty() &&
-                    operatorStack.top().second != "(" && // Не трогаем "("
+                    operatorStack.top().second != "(" &&
                     (getPrecedence(operatorStack.top().second) > getPrecedence(value) ||
                         (getPrecedence(operatorStack.top().second) == getPrecedence(value) && isLeftAssociative(value)))) {
                     tokensPost.push_back(operatorStack.top());
                     operatorStack.pop();
                 }
-                operatorStack.push(token); // Добавляем оператор в стек
+                operatorStack.push(token);
             }
         }
     }
 
-    // Опустошаем стек
     while (!operatorStack.empty()) {
         tokensPost.push_back(operatorStack.top());
         operatorStack.pop();
     }
 }
 
-
-// Преобразование постфиксной записи в инфиксную
 void SortingStation::postToInf() 
 {
     tokensInf.clear();
@@ -257,8 +244,6 @@ void SortingStation::postToInf()
     tokensInf.emplace_back("value", expressionStack.top());
 }
 
-
-// Вычисление выражения в постфиксной записи
 number SortingStation::evaluatePost() {
     Stack<number> valueStack;
 
@@ -267,10 +252,9 @@ number SortingStation::evaluatePost() {
         const std::string& value = token.second;
 
         if (type == "value") {
-            valueStack.push(std::stod(value)); // Преобразуем строку в число
+            valueStack.push(std::stod(value));
         }
         else if (type == "operator") {
-            // Обрабатываем бинарные операторы
             if (value == "+" || value == "-" || value == "*" || value == "/" || value == "^") {
                 if (valueStack.getSize() < 2) {
                     throw std::runtime_error("Недостаточно операндов для выполнения бинарной операции");
@@ -297,10 +281,9 @@ number SortingStation::evaluatePost() {
                     valueStack.push(leftOperand / rightOperand);
                 }
                 else if (value == "^") {
-                    valueStack.push(std::pow(leftOperand, rightOperand)); // Возведение в степень
+                    valueStack.push(std::pow(leftOperand, rightOperand));
                 }
             }
-            // Обрабатываем унарные операторы
             else if (value == "sin" || value == "cos") {
                 if (valueStack.empty()) {
                     throw std::runtime_error("Недостаточно операндов для выполнения унарной операции");
@@ -326,11 +309,9 @@ number SortingStation::evaluatePost() {
         throw std::runtime_error("Ошибка: некорректное выражение");
     }
 
-    return valueStack.top(); // Возвращаем результат вычисления
+    return valueStack.top();
 }
 
-
-// Печать инфиксного выражения
 void SortingStation::showInf(std::ostream& output) const 
 {
     if (!tokensInf.empty()) {
@@ -344,7 +325,6 @@ void SortingStation::showInf(std::ostream& output) const
     }
 }
 
-// Печать постфиксного выражения
 void SortingStation::showPost(std::ostream& output) const 
 {
     if (!tokensPost.empty()) {

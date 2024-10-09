@@ -163,19 +163,26 @@ size_t Array<T>::getCapacity() const
 
 // Вставка элемента в заданную позицию
 template <typename T>
-void Array<T>::insert(size_t index, const T& value) 
+void Array<T>::insert(size_t index, const T& value)
 {
-    if (index > size) {
+    if (index > capacity) {
         throw std::out_of_range("Index out of bounds");
     }
     if (size == capacity) {
         resize(capacity == 0 ? 1 : capacity * 2);
     }
+    if (index > size) {
+        for (size_t i = size; i < index; ++i) {
+            data[i] = T();
+        }
+    }
+
     for (size_t i = size; i > index; --i) {
         data[i] = data[i - 1];
     }
+
     data[index] = value;
-    size++;
+    size = std::max(size + 1, index + 1);
 }
 
 // Удаление элемента по индексу
@@ -185,10 +192,13 @@ void Array<T>::erase(size_t index)
     if (index >= size) {
         throw std::out_of_range("Index out of bounds");
     }
-    for (size_t i = index; i < size - 1; ++i) {
+    for (size_t i = index; i < capacity - 1; ++i) {
         data[i] = data[i + 1];
     }
     --size;
+    if (size <= capacity / 4) {
+        resize(capacity / 2);
+    }
 }
 
 // Сортировка массива
@@ -214,9 +224,9 @@ template <typename T>
 void Array<T>::print(std::ostream& os) const 
 {
     for (size_t i = 0; i < size; ++i) {
-        os << data[i] << " ";  // Выводим каждый элемент массива
+        os << data[i] << " ";
     }
-    os << std::endl;  // Переходим на новую строку
+    os << std::endl;
 }
 
 #endif

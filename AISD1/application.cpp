@@ -2,7 +2,6 @@
 #include <limits>
 #include <sstream>
 
-// Application::Application() и другие методы
 Application::Application() : list(), array(), stack(), station() {}
 
 Application::~Application() {}
@@ -11,12 +10,12 @@ bool Application::getValidInput(number& value)
 {
     std::cin >> value;
     if (std::cin.fail() || std::cin.peek() != '\n') {
-        std::cin.clear(); // Сброс состояния потока
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Пропуск неправильного ввода
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::cout << "Некорректный ввод! Попробуйте снова.\n";
         return false;
     }
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Удаление оставшихся символов
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     return true;
 }
 
@@ -24,12 +23,12 @@ bool Application::getValidInput(size_t& value)
 {
     std::cin >> value;
     if (std::cin.fail() || std::cin.peek() != '\n') {
-        std::cin.clear(); // Сброс состояния потока
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Пропуск неправильного ввода
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::cout << "Некорректный ввод! Попробуйте снова.\n";
         return false;
     }
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Удаление оставшихся символов
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     return true;
 }
 
@@ -81,8 +80,6 @@ void Application::run()
         else if (command == "c") {
             std::cout << commands;
         }
-
-        // Функция для безопасного ввода чисел с обработкой ошибок ввода
 
         else if (command == "1") {
             const char listCommands[] =

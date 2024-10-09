@@ -26,6 +26,4 @@ public:
     void run();
 };
 
-
-
 #endif

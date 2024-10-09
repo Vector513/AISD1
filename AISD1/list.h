@@ -206,14 +206,26 @@ void List<T>::insert(size_t index, const T& data)
         push_back(data);
     }
     else {
-        ListNode* current = head;
-        for (size_t i = 0; i < index; ++i) {
-            current = current->next;
+        if (index < size / 2) {
+            ListNode* current = head;
+            for (size_t i = 0; i < index; ++i) {
+                current = current->next;
+            }
+            ListNode* newNode = new ListNode(data, current->prev, current);
+            current->prev->next = newNode;
+            current->prev = newNode;
+            size++;
         }
-        ListNode* newNode = new ListNode(data, current->prev, current);
-        current->prev->next = newNode;
-        current->prev = newNode;
-        size++;
+        else {
+            ListNode* current = tail;
+            for (size_t i = size - 1; i > index; --i) {
+                current = current->prev;
+            }
+            ListNode* newNode = new ListNode(data, current->prev, current);
+            current->prev->next = newNode;
+            current->prev = newNode;
+            size++;
+        }
     }
 }
 
